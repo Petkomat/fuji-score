@@ -5,7 +5,7 @@ import scipy.stats.stats as stats
 
 
 ALLOWED_MEASURES = ["fuzzy_jaccard", "jaccard", "hamming", "pog", "npog", "kuncheva", "wald", "lustgarten", "krizek",
-                    "cwrel", "pearson", "correlation"]
+                    "cwrel", "pearson", "correlation", "fuzzy_gamma"]
 
 STEP_1 = 1
 STEP_SQUARED = "squared"
@@ -56,6 +56,10 @@ class Fimp:
         for i, (_, name, _, _) in enumerate(self.table):
             self.table[i][-1][ranking_index] = feature_relevances[i]
             self.features[name][-1][ranking_index] = feature_relevances[i]
+
+    def get_rank(self, feature_name, ranking_index=None):
+        i = 0 if ranking_index is None else ranking_index
+        return self.features[feature_name][-2][i]
 
     @staticmethod
     def create_fimp_from_relevances(feature_relavance_scores,
@@ -166,14 +170,14 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
             scores = f.get_relevances(0)
             n = len(scores)
             finite = [s for s in scores if -float("inf") < s < float("inf")]
-            m_M = [min(finite), max(finite)]
+            min_max = [min(finite), max(finite)]
             for i, s in enumerate(scores):
                 if -float("inf") < s < float("inf"):
                     continue
                 elif -float("inf") == s:
-                    scores[i] = m_M[0]
+                    scores[i] = min_max[0]
                 elif float("inf") == s:
-                    scores[i] = m_M[1]
+                    scores[i] = min_max[1]
                 else:
                     print("Very special value:", s, "at the position", i)
                     scores[i] = 0  # NaN
@@ -255,6 +259,66 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
                 raise ValueError("Wrong measure: {}".format(measure))
         return results
 
+    def fuzzy_gamma(f1: Fimp, f2: Fimp):
+        # S. Henzgen, E. Hüllermeier.
+        # Weighted Rank Correlation: A Flexible Approach based on Fuzzy Order Realtions. ECML/PKDD 2015.
+        def distance(rank1, rank2):
+            if rank1 == rank2:
+                return 0.0
+            else:
+                return 1.0  # a.k.a max(ws[min(rank1, rank2): max(rank1, rank2)])
+
+        # def t_function(a, b):
+        #     return a * b
+
+        def r_function(rank1, rank2):
+            return 0.0 if rank1 >= rank2 else distance(rank1, rank2)
+
+        def c_d_function(feature1, feature2):
+            rank11 = f1.get_rank(feature1, 0)
+            rank12 = f1.get_rank(feature2, 0)
+            rank21 = f2.get_rank(feature1, 0)
+            rank22 = f2.get_rank(feature2, 0)
+            r11_12 = r_function(rank11, rank12)
+            r12_11 = r_function(rank12, rank11)
+            r21_22 = r_function(rank21, rank22)
+            r22_21 = r_function(rank22, rank21)
+            c = r11_12 * r21_22 + r12_11 * r22_21
+            d = r11_12 * r22_21 + r12_11 * r21_22
+            return c, d
+
+        f1.sort_by_relevance(0)
+        f2.sort_by_relevance(0)
+        attributes = [f1.get_feature_names(), f2.get_feature_names()]
+        n = len(attributes[0])
+        # ws = [1.0] * n  # ws[i]: distance between rank i and i + 1, i >= 0
+        results = [0.0] * n
+        union = set()
+        c_total = 0.0
+        d_total = 0.0
+        iterator = trange(n) if (use_tqdm or use_tqdm is None and n > 1000) else range(n)
+        for i in iterator:
+            a1, a2 = attributes[0][i], attributes[1][i]
+            new_features = set()
+            for a in [a1, a2]:
+                if a not in union:
+                    new_features.add(a)
+            # previous and one of the new
+            for a2 in new_features:
+                for a1 in union:
+                    c_part, d_part = c_d_function(a1, a2)
+                    c_total += c_part
+                    d_total += d_part
+            union |= new_features
+            if len(new_features) == 2:
+                c_part, d_part = c_d_function(attributes[0][i], attributes[1][i])
+                c_total += c_part
+                d_total += d_part
+            numerator = c_total - d_total
+            nominator = c_total + d_total
+            results[i] = numerator / nominator if nominator > 0 else 1.0
+        return results
+
     def sort_fimps(f1: Fimp, f2: Fimp):
         for f in [f1, f2]:
             f.sort_by_relevance(0)
@@ -271,6 +335,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
     elif similarity_measure in ["jaccard", "hamming", "pog", "npog", "kuncheva",
                                 "wald", "lustgarten", "krizek", "cwrel", "pearson"]:
         return jaccard_hamming_pog_npog_kuncheva_lustgarten_wald_krizek_cwrel_pearson(fimp1, fimp2, similarity_measure)
+    elif similarity_measure == "fuzzy_gamma":
+        return fuzzy_gamma(fimp1, fimp2)
     else:
         raise ValueError("Wrong Error measure: {}".format(similarity_measure))
 

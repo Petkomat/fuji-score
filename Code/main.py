@@ -57,3 +57,4 @@ if __name__ == "__main__":
     print(compute_similarity(r, s, "jaccard"))
     print(compute_similarity(r, s, "cwrel"))
     print(compute_similarity(r, s, "correlation"))
+    print(compute_similarity(r, s, "fuzzy_gamma"))
