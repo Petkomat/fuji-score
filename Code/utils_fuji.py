@@ -3,9 +3,10 @@ from tqdm import trange
 import numpy as np
 import scipy.stats.stats as stats
 
-
-ALLOWED_MEASURES = ["fuzzy_jaccard", "jaccard", "hamming", "pog", "npog", "kuncheva", "wald", "lustgarten", "krizek",
-                    "cwrel", "pearson", "correlation", "fuzzy_gamma"]
+ALLOWED_MEASURES = [
+    "fuzzy_jaccard", "jaccard", "hamming", "pog", "npog", "kuncheva", "wald",
+    "lustgarten", "krizek", "cwrel", "pearson", "correlation", "fuzzy_gamma"
+]
 
 STEP_1 = 1
 STEP_SQUARED = "squared"
@@ -14,11 +15,14 @@ ALLOWED_STEPS = [STEP_1, STEP_SQUARED, STEP_EXP]
 
 IMPORTANCE_HANDLER_RAISE = "raise"
 IMPORTANCE_HANDLER_CORRECT = "correct"
-ALLOWED_IMPORTANCE_HANDLERS = [IMPORTANCE_HANDLER_RAISE, IMPORTANCE_HANDLER_CORRECT]
+ALLOWED_IMPORTANCE_HANDLERS = [
+    IMPORTANCE_HANDLER_RAISE, IMPORTANCE_HANDLER_CORRECT
+]
 
 
 class Fimp:
-    def __init__(self, feature_dictionary: Dict[str, Tuple[int, List[int], List[float]]]):
+    def __init__(self, feature_dictionary: Dict[str, Tuple[int, List[int],
+                                                           List[float]]]):
         """
         Creates a feature importance structure.
         :param feature_dictionary: A dictionary of the form
@@ -31,7 +35,10 @@ class Fimp:
         self.features = {}  # {name: [dataset index, ranks, relevances], ...}
         self.features = feature_dictionary
         for attr in feature_dictionary:
-            row = [feature_dictionary[attr][0], attr, feature_dictionary[attr][1], feature_dictionary[attr][2]]
+            row = [
+                feature_dictionary[attr][0], attr, feature_dictionary[attr][1],
+                feature_dictionary[attr][2]
+            ]
             self.table.append(row)
 
     def sort_by_feature_index(self):
@@ -44,7 +51,10 @@ class Fimp:
         return [row[1] for row in self.table]
 
     def get_relevances(self, ranking_index=None):
-        return [row[-1] if ranking_index is None else row[-1][ranking_index] for row in self.table]
+        return [
+            row[-1] if ranking_index is None else row[-1][ranking_index]
+            for row in self.table
+        ]
 
     def get_relevance(self, feature_name, ranking_index=None):
         i = 0 if ranking_index is None else ranking_index
@@ -63,8 +73,10 @@ class Fimp:
 
     @staticmethod
     def create_fimp_from_relevances(feature_relavance_scores,
-                                    feature_names: Union[List[str], None] = None,
-                                    feature_indices: Union[List[int], None] = None):
+                                    feature_names: Union[List[str],
+                                                         None] = None,
+                                    feature_indices: Union[List[int],
+                                                           None] = None):
         n = len(feature_relavance_scores)
         if feature_indices is None:
             feature_indices = [i + 1 for i in range(n)]
@@ -78,18 +90,22 @@ class Fimp:
         rank = 0
         for i, relevance_position in enumerate(relevances_positions):
             relevance, position = relevance_position
-            if i == 0 or abs(relevance - relevances_positions[i - 1][0]) > 10 ** -12:
+            if i == 0 or abs(relevance -
+                             relevances_positions[i - 1][0]) > 10**-12:
                 rank = i + 1
             ranks[position] = rank
-        d = {a: (i, [rank], [relevance]) for a, i, rank, relevance in zip(feature_names,
-                                                                          feature_indices,
-                                                                          ranks,
-                                                                          feature_relavance_scores)}
+        d = {
+            a: (i, [rank], [relevance])
+            for a, i, rank, relevance in zip(feature_names, feature_indices,
+                                             ranks, feature_relavance_scores)
+        }
         return Fimp(feature_dictionary=d)
 
 
-def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str, eps: float,
-                              step: Union[str, int], use_tqdm: bool, negative_importances_handler: str):
+def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp,
+                              similarity_measure: str, eps: float,
+                              step: Union[str, int], use_tqdm: bool,
+                              negative_importances_handler: str):
     def fuzzy_jaccard(f1: Fimp, f2: Fimp):
         def relative_score(absolute_score, normalisation_factor):
             if normalisation_factor == 0.0:
@@ -106,12 +122,15 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
             feature_relevances = f.get_relevances(0)
             if min(feature_relevances) < 0:
                 if negative_importances_handler == "raise":
-                    raise ValueError("Feature importances must not be negative")
+                    raise ValueError(
+                        "Feature importances must not be negative")
                 elif negative_importances_handler == "correct":
                     non_negative = [max(0, r) for r in feature_relevances]
                     f.set_relevances(0, non_negative)
                 else:
-                    raise ValueError("Wrong negative importances handling: {}".format(negative_importances_handler))
+                    raise ValueError(
+                        "Wrong negative importances handling: {}".format(
+                            negative_importances_handler))
         if isinstance(step, str):
             feature_subset_sizes = []
             if step == "exp":
@@ -121,8 +140,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
                     i *= 2
             elif step == "squared":
                 i = 1
-                while i ** 2 <= n:
-                    feature_subset_sizes.append(i ** 2 - 1)
+                while i**2 <= n:
+                    feature_subset_sizes.append(i**2 - 1)
                     i += 1
             else:
                 raise ValueError("Wrong step specification: {}".format(step))
@@ -139,7 +158,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
         intersection_set = set()
         iterator = trange(n) if use_tqdm else range(n)
         for i in iterator:
-            for j, (attributes_ranking, f) in enumerate(zip(attributes, [f1, f2])):
+            for j, (attributes_ranking,
+                    f) in enumerate(zip(attributes, [f1, f2])):
                 feature = attributes_ranking[i]
                 s = f.get_relevance(feature, 0)
                 min_scores[j] = min(min_scores[j], s)
@@ -156,8 +176,14 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
                 continue
             fuzzy_intersection = len(intersection_set)
             for feature in union_set:
-                s1 = min(1.0, relative_score(f1.get_relevance(feature, 0), min_scores[0]))
-                s2 = min(1.0, relative_score(f2.get_relevance(feature, 0), min_scores[1]))
+                s1 = min(
+                    1.0,
+                    relative_score(f1.get_relevance(feature, 0),
+                                   min_scores[0]))
+                s2 = min(
+                    1.0,
+                    relative_score(f2.get_relevance(feature, 0),
+                                   min_scores[1]))
                 fuzzy_intersection += min(s1, s2)
             fuzzy_union = len(intersection_set) + len(union_set)
             results[i_subset] = fuzzy_intersection / fuzzy_union
@@ -202,7 +228,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
             results[i] = coefficient
         return results
 
-    def jaccard_hamming_pog_npog_kuncheva_lustgarten_wald_krizek_cwrel_pearson(f1: Fimp, f2: Fimp, measure):
+    def jaccard_hamming_pog_npog_kuncheva_lustgarten_wald_krizek_cwrel_pearson(
+            f1: Fimp, f2: Fimp, measure):
         sort_fimps(f1, f2)
         attributes = [f1.get_feature_names(), f2.get_feature_names()]
         n = len(attributes[0])
@@ -232,12 +259,14 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
                 results[i] = len(intersection) / k
             elif measure in ["npog", "kuncheva", "wald", "pearson"]:
                 if k < n:
-                    results[i] = (len(intersection) - k ** 2 / n) / (k - k ** 2 / n)
+                    results[i] = (len(intersection) - k**2 / n) / (k -
+                                                                   k**2 / n)
                 else:
                     results[i] = 1.0
             elif measure == "lustgarten":
                 if k < n:
-                    results[i] = (len(intersection) - k ** 2 / n) / (k - max(0, 2 * k - n))
+                    results[i] = (len(intersection) -
+                                  k**2 / n) / (k - max(0, 2 * k - n))
                 else:
                     results[i] = 1.0
             elif measure == "krizek":
@@ -246,11 +275,14 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
             elif measure == "cwrel":
                 # this is what cwrel boils down to when we compare two feature subsets.
                 y = n  # keep the notation from the paper to avoid mistakes
-                n_capital = len(union) + len(intersection)  # sum of feature subset sizes
+                n_capital = len(union) + len(
+                    intersection)  # sum of feature subset sizes
                 d = n_capital % y
                 h = n_capital % 2  # 2: number of feature subsets
-                numerator = y * (n_capital - d + 2 * len(intersection)) - n_capital ** 2 + d ** 2
-                nominator = y * (h ** 2 + 2 * (n_capital - h) - d) - n_capital ** 2 + d ** 2
+                numerator = y * (n_capital - d +
+                                 2 * len(intersection)) - n_capital**2 + d**2
+                nominator = y * (h**2 + 2 *
+                                 (n_capital - h) - d) - n_capital**2 + d**2
                 if k < n:
                     results[i] = numerator / nominator
                 else:
@@ -296,7 +328,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
         union = set()
         c_total = 0.0
         d_total = 0.0
-        iterator = trange(n) if (use_tqdm or use_tqdm is None and n > 1000) else range(n)
+        iterator = trange(n) if (
+            use_tqdm or use_tqdm is None and n > 1000) else range(n)
         for i in iterator:
             a1, a2 = attributes[0][i], attributes[1][i]
             new_features = set()
@@ -311,7 +344,8 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
                     d_total += d_part
             union |= new_features
             if len(new_features) == 2:
-                c_part, d_part = c_d_function(attributes[0][i], attributes[1][i])
+                c_part, d_part = c_d_function(attributes[0][i],
+                                              attributes[1][i])
                 c_total += c_part
                 d_total += d_part
             numerator = c_total - d_total
@@ -332,9 +366,12 @@ def compute_similarity_helper(fimp1: Fimp, fimp2: Fimp, similarity_measure: str,
         return fuzzy_jaccard(fimp1, fimp2)
     elif similarity_measure == "correlation":
         return correlation(fimp1, fimp2)
-    elif similarity_measure in ["jaccard", "hamming", "pog", "npog", "kuncheva",
-                                "wald", "lustgarten", "krizek", "cwrel", "pearson"]:
-        return jaccard_hamming_pog_npog_kuncheva_lustgarten_wald_krizek_cwrel_pearson(fimp1, fimp2, similarity_measure)
+    elif similarity_measure in [
+            "jaccard", "hamming", "pog", "npog", "kuncheva", "wald",
+            "lustgarten", "krizek", "cwrel", "pearson"
+    ]:
+        return jaccard_hamming_pog_npog_kuncheva_lustgarten_wald_krizek_cwrel_pearson(
+            fimp1, fimp2, similarity_measure)
     elif similarity_measure == "fuzzy_gamma":
         return fuzzy_gamma(fimp1, fimp2)
     else:

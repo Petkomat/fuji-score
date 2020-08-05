@@ -2,8 +2,12 @@ from typing import Union
 from utils_fuji import *
 
 
-def compute_similarity(scores1, scores2, similarity_measure: str,
-                       eps: float = 0.0, step: Union[str, int] = 1, use_progress_bar=None,
+def compute_similarity(scores1,
+                       scores2,
+                       similarity_measure: str,
+                       eps: float = 0.0,
+                       step: Union[str, int] = 1,
+                       use_progress_bar=None,
                        negative_importances_handler="raise"):
     """
     Computes (fuzzy) Jaccard similarity between two ranked lists.
@@ -31,22 +35,22 @@ def compute_similarity(scores1, scores2, similarity_measure: str,
     """
     message = "The chosen {} {} is not among the allowed ones: {}"
     if similarity_measure not in ALLOWED_MEASURES:
-        raise ValueError(message.format("similarity measure",
-                                        similarity_measure,
-                                        ALLOWED_MEASURES))
+        raise ValueError(
+            message.format("similarity measure", similarity_measure,
+                           ALLOWED_MEASURES))
     if step not in ALLOWED_STEPS:
-        raise ValueError(message.format("step",
-                                        step,
-                                        ALLOWED_STEPS))
+        raise ValueError(message.format("step", step, ALLOWED_STEPS))
     if negative_importances_handler not in ALLOWED_IMPORTANCE_HANDLERS:
-        raise ValueError(message.format("negative importance handler",
-                                        negative_importances_handler,
-                                        ALLOWED_IMPORTANCE_HANDLERS))
+        raise ValueError(
+            message.format("negative importance handler",
+                           negative_importances_handler,
+                           ALLOWED_IMPORTANCE_HANDLERS))
 
     fimp1 = Fimp.create_fimp_from_relevances(scores1)
     fimp2 = Fimp.create_fimp_from_relevances(scores2)
-    curve = compute_similarity_helper(fimp1, fimp2, similarity_measure,
-                                      eps, step, use_progress_bar, negative_importances_handler)
+    curve = compute_similarity_helper(fimp1, fimp2, similarity_measure, eps,
+                                      step, use_progress_bar,
+                                      negative_importances_handler)
     area_under_curve = area_under_the_curve(curve)
     return curve, area_under_curve
 
