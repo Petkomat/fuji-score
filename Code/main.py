@@ -10,7 +10,8 @@ def compute_similarity(scores1, scores2, similarity_measure: str,
 
     :param scores1: first list/array of scores of features/items/...
     :param scores2: analogue of scores1
-    :param similarity_measure: either 'jaccard' or 'fuzzy_jaccard'
+    :param similarity_measure: either 'fuzzy_jaccard' or any of the allowed similarity measures
+                               (see utils_fuji.ALLOWED_MEASURES)
     :param eps: applicable if similarity_measure is 'fuzzy_jaccard'; in that case,
                 the threshold under which the scores are considered to be 0
     :param step: applicable if similarity_measure is 'fuzzy_jaccard'; in that case,
