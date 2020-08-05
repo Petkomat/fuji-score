@@ -1,11 +1,4 @@
-# fuji-score
-
-Fuzzy Jaccard Index (FUJI) implementation and data
-
-
-## .fimp files
-
-The structure of the files is the following:
+.fimp file structure:
 
 <meta data (if available)>
 <table>
