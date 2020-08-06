@@ -1,6 +1,19 @@
-# fuji-score
+# FUJI: Fuzzy Jaccard Index: A robust comparison of ordered lists
 
-Fuzzy Jaccard Index (FUJI) implementation and data
+This repository contains the code (and many feature rankings computed on the real-life benchmark data sets) from the paper [Fuzzy Jaccard Index: A robust comparison of ordered lists](https://arxiv.org/abs/2008.02216).
+
+This code is distributed under the [Creative Commons Attribution license (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/), so the authors would greatly apprecieate if you acknowledge its use by citing the paper above (the corresponding bibtex is shown below).
+
+```
+@misc{petkovic2020fuzzy,
+    title={Fuzzy Jaccard Index: A robust comparison of ordered lists},
+    author={Matej Petkovi\{c} and Bla\v{z} \v{S}krlj and Dragi Kocev and Nikola Simidjievski},
+    year={2020},
+    eprint={2008.02216},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
+```
 
 ## Dependencies
 
