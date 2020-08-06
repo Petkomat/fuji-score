@@ -1,6 +1,6 @@
 # FUJI: Fuzzy Jaccard Index: A robust comparison of ordered lists
 
-This repository contains the code (and many feature rankings computed on the real-life benchmark data sets) from the paper [Fuzzy Jaccard Index: A robust comparison of ordered lists](https://arxiv.org/abs/2008.02216).
+This repository contains the code (and many feature rankings computed on over twenty real-life benchmark data sets) from the paper [Fuzzy Jaccard Index: A robust comparison of ordered lists](https://arxiv.org/abs/2008.02216).
 
 This code is distributed under the [Creative Commons Attribution license (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/), so the authors would greatly apprecieate if you acknowledge its use by citing the paper above (the corresponding bibtex is shown below).
 
