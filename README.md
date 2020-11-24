@@ -15,6 +15,26 @@ This code is distributed under the [Creative Commons Attribution license (CC BY 
 }
 ```
 
+## Example
+
+The code is easy to use and implements the FUJI score (`fuzzy_jaccard`), as well as all the baselines that we compare to (`jaccard`, `hamming`, `pog`, `npog`, `kuncheva`, `wald`, `lustgarten`, `krizek`, `cwrel`, `pearson`, `correlation`, `fuzzy_gamma`).
+
+For example, once we obtain the rankings `r` and `s`, e.g., 
+
+
+```
+r = [1.0, 0.9, 0.3, 0.14, 0.1]
+s = [0.8, 0.9, 0.3, 0.14, 0.1]
+```
+
+(where `r[i]` and `s[i]` give the importance of the i-th feature), FUJI can be computed as
+
+```
+curve, auc = compute_similarity(r, s, "fuzzy_jaccard")
+```
+
+The list `curve` is a list, containing the FUJI values at each point, and `auc` is the area under this curve.
+
 ## Dependencies
 
 The code implements many similarity scores. Some of them need [`numpy`](https://numpy.org/install/) or [`scipy`](https://www.scipy.org/install.html). For showing the progress, [`tqdm`](https://pypi.org/project/tqdm/) can be used.
