@@ -44,10 +44,12 @@ The code implements many similarity scores. Some of them need [`numpy`](https://
 
 The structure of the files is the following:
 
+```
 <meta data (if available)>
 <fimp table>
+```
 
-<fimp table> consists of four columns:
+`<fimp table>` consists of four columns:
 
 - index of the feature in the dataset
 - name of the feature
